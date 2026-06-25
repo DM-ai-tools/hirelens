@@ -38,7 +38,7 @@ COPY --from=builder /app/scripts/start-production.sh ./scripts/start-production.
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+COPY --from=builder /app/node_modules/.bin/prisma* ./node_modules/.bin/
 
 RUN chmod +x ./scripts/start-production.sh \
   && mkdir -p uploads reports \
