@@ -72,7 +72,13 @@ Set `ANTHROPIC_API_KEY` for real Claude evaluation, or keep `USE_MOCK_AI=true` f
 2. Add PostgreSQL service and link `DATABASE_URL=${{Postgres.DATABASE_URL}}`
 3. Set `NEXTAUTH_URL` and `AUTH_URL` to your Railway public URL
 4. Deploy using included `Dockerfile` and `railway.json`
-5. **Networking:** In the app service → Settings → Networking → Public domain → set **Target port** to Railway's `PORT` (usually **8080**). If you see "The train has not arrived at the station", regenerate the domain and confirm the target port matches deploy logs (`Starting server on 0.0.0.0:8080`).
+5. **Networking (fix “train has not arrived”):**
+   - Open the **app service** (not Postgres) → **Settings** → **Networking**
+   - Turn **Public Networking** ON
+   - **Delete** the old domain, then **Generate Domain** again
+   - Set **Target port** to the same port shown in deploy logs (e.g. `8080` after `Starting server on host=:: port=8080`)
+   - Do **not** set a custom `PORT=3000` variable unless target port is also `3000`
+   - Redeploy after changing networking
 
 ```bash
 docker compose up --build

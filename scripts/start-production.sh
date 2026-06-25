@@ -21,9 +21,9 @@ else
   echo "[HireLens] WARNING: DATABASE_URL is not set — skipping migrations"
 fi
 
-# Railway injects PORT (commonly 8080). Bind on all interfaces for the edge proxy.
-export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+# Railway injects PORT (often 8080). V2 networking prefers IPv6 — bind :: for the edge proxy.
+export HOSTNAME="::"
 export PORT="${PORT:-8080}"
 
-echo "[HireLens] Starting server on ${HOSTNAME}:${PORT}"
+echo "[HireLens] Starting server on host=${HOSTNAME} port=${PORT}"
 exec node server.js
