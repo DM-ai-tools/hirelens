@@ -47,13 +47,18 @@ COPY --from=builder /app/scripts/start-production.sh ./scripts/start-production.
 
 COPY --from=migrate-deps /app/node_modules ./prisma-migrate/node_modules
 
+# prisma.config.ts resolves imports from /app — expose migrate CLI deps (dotenv, etc.).
+COPY --from=migrate-deps /app/node_modules/dotenv ./node_modules/dotenv
+
 # Next.js standalone ships a partial Prisma CLI without transitive deps (e.g. effect).
 RUN rm -f ./node_modules/.bin/prisma ./node_modules/.bin/prisma.cmd 2>/dev/null || true \
   && rm -rf ./node_modules/prisma 2>/dev/null || true
 
 RUN chmod +x ./scripts/start-production.sh \
   && chmod -R a+rX ./prisma-migrate/node_modules \
+  && test -f ./prisma-migrate/node_modules/dotenv/package.json \
   && test -f ./prisma-migrate/node_modules/effect/package.json \
+  && test -f ./node_modules/dotenv/package.json \
   && test -f ./prisma-migrate/node_modules/prisma/build/index.js \
   && mkdir -p uploads reports \
   && chown -R nextjs:nodejs uploads reports prisma-migrate scripts/start-production.sh

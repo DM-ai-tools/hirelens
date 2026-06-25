@@ -6,11 +6,13 @@ REPORT_DIR="${REPORT_DIR:-/app/reports}"
 mkdir -p "$UPLOAD_DIR" "$REPORT_DIR"
 
 PRISMA_MIGRATE_CLI="./prisma-migrate/node_modules/prisma/build/index.js"
+PRISMA_MIGRATE_NODE_PATH="$(pwd)/prisma-migrate/node_modules"
 
 if [ -n "$DATABASE_URL" ]; then
   echo "[HireLens] Applying database migrations..."
   if [ -f "$PRISMA_MIGRATE_CLI" ]; then
-    node "$PRISMA_MIGRATE_CLI" migrate deploy
+    NODE_PATH="$PRISMA_MIGRATE_NODE_PATH${NODE_PATH:+:$NODE_PATH}" \
+      node "$PRISMA_MIGRATE_CLI" migrate deploy
   else
     echo "[HireLens] ERROR: Prisma migrate CLI missing at $PRISMA_MIGRATE_CLI"
     exit 1
