@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  RECRUITER
+}
+
+enum JobStatus {
+  DRAFT
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum CandidateStatus {
+  UPLOADED
+  PARSING
+  PARSED
+  EVALUATING
+  EVALUATED
+  FAILED
+  NEEDS_REVIEW
+}
+
+enum GoodToCall {
+  YES
+  MAYBE
+  NO
+  NEEDS_REVIEW
+}
+
+enum AssessmentType {
+  LINK
+  ATTACHMENT
+}
+
+enum SendStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+enum ReportFormat {
+  PDF
+  XLSX
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(RECRUITER)
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  jobs          Job[]
+  auditLogs     AuditLog[]
+  assessmentSends AssessmentSend[]
+}
+
+model Job {
+  id                String      @id @default(cuid())
+  title             String
+  department        String?
+  location          String?
+  employmentType    String?
+  minExperience     Float       @default(0)
+  mustHaveSkills    String[]
+  niceToHaveSkills  String[]
+  mandatoryRequirements String? @db.Text
+  jdText            String      @db.Text
+  jdFilePath        String?
+  status            JobStatus   @default(DRAFT)
+  scoreThreshold    Float       @default(70)
+  scoringConfig     Json?
+  createdById       String
+  createdBy         User        @relation(fields: [createdById], references: [id])
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  candidates        Candidate[]
+  reports           Report[]
+  processingRuns    ProcessingRun[]
+}
+
+model Candidate {
+  id                  String          @id @default(cuid())
+  jobId               String
+  job                 Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  name                String?
+  email               String?
+  phone               String?
+  resumePath          String
+  resumeFileName      String
+  rawText             String?         @db.Text
+  parsedData          Json?
+  overallExperience   Float?
+  relevantExperience  Float?
+  strengths           String[]
+  missingSkills       String[]
+  matchedSkills       String[]
+  score               Float?
+  rank                Int?
+  goodToCall          GoodToCall?
+  scoreBreakdown      Json?
+  aiRationale         String?         @db.Text
+  llmRaw              Json?
+  experienceIntelligenceScore Float?
+  experienceIntelligenceRank  Int?
+  experienceIntelligenceData Json?
+  status              CandidateStatus @default(UPLOADED)
+  selected            Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  assessmentSends     AssessmentSend[]
+}
+
+model Assessment {
+  id          String         @id @default(cuid())
+  name        String
+  type        AssessmentType @default(LINK)
+  url         String?
+  filePath    String?
+  roleTag     String?
+  description String?
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sends       AssessmentSend[]
+  files       AssessmentFile[]
+}
+
+model AssessmentFile {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  filePath     String
+  fileName     String
+  mimeType     String?
+  sizeBytes    Int?
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@index([assessmentId])
+}
+
+model AssessmentSend {
+  id             String     @id @default(cuid())
+  candidateId    String
+  candidate      Candidate  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  assessmentId   String
+  assessment     Assessment @relation(fields: [assessmentId], references: [id])
+  email          String
+  templateId     String?
+  templateName   String?
+  subject        String?
+  bodyHtml       String?    @db.Text
+  providerMsgId  String?
+  status         SendStatus @default(QUEUED)
+  deadline       DateTime?
+  timezone       String?    @default("Asia/Kolkata")
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  aiGenerated    Boolean    @default(false)
+  sentById       String?
+  sentBy         User?      @relation(fields: [sentById], references: [id])
+  errorMessage   String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  jobId       String
+  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  filePath    String
+  format      ReportFormat
+  generatedAt DateTime     @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model Settings {
+  id                      String   @id @default("default")
+  companyName             String   @default("DOTMappers IT Pvt Ltd")
+  companyLogo             String?
+  primaryColor            String   @default("#C8202A")
+  anthropicApiKey         String?
+  resendApiKey            String?
+  defaultAssessmentDays   Int      @default(7)
+  contactEmail            String   @default("contact@dotmappers.in")
+  contactPhone            String   @default("080-31206609")
+  updatedAt               DateTime @updatedAt
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  bodyHtml  String   @db.Text
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProcessingRun {
+  id              String   @id @default(cuid())
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  totalCandidates Int      @default(0)
+  parsedCount     Int      @default(0)
+  evaluatedCount  Int      @default(0)
+  currentStage    String   @default("ingest")
+  etaSeconds      Int?
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+}

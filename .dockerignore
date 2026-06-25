@@ -1,0 +1,30 @@
+# Dependencies & build output
+node_modules
+.next
+out
+build
+coverage
+
+# Local env & secrets
+.env
+.env.*
+!.env.example
+
+# Git & IDE
+.git
+.gitignore
+.vscode
+.cursor
+
+# Uploads & generated reports (runtime volumes on Railway)
+uploads
+reports
+
+# OS & logs
+.DS_Store
+*.log
+npm-debug.log*
+
+# Dev-only
+*.md
+!README.md

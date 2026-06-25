@@ -1,0 +1,199 @@
+@import "tailwindcss" source(none);
+/* tailwind-sources:start — run: node scripts/gen-tailwind-sources.mjs */
+@source "./*.tsx";
+@source "../components/*.tsx";
+@source "../components/admin/*.tsx";
+@source "../components/auth/*.tsx";
+@source "../components/brand/*.tsx";
+@source "../components/candidates/*.tsx";
+@source "../components/charts/*.tsx";
+@source "../components/layout/*.tsx";
+@source "../components/report/*.tsx";
+@source "../components/screening/*.tsx";
+@source "../components/search/*.tsx";
+@source "../components/theme/*.tsx";
+@source "../components/ui/*.tsx";
+@source "../emails/*.tsx";
+@source "../features/admin/components/candidates/*.tsx";
+@source "../features/admin/components/dashboard/*.tsx";
+@source "../features/admin/components/layout/*.tsx";
+@source "../features/admin/components/notifications/*.tsx";
+@source "../features/admin/components/shared/*.tsx";
+@source "admin/*.tsx";
+@source "admin/analytics/*.tsx";
+@source "admin/assessments/*.tsx";
+@source "admin/billing/*.tsx";
+@source "admin/candidates/*.tsx";
+@source "admin/email-templates/*.tsx";
+@source "admin/jobs/*.tsx";
+@source "admin/logs/*.tsx";
+@source "admin/profile/*.tsx";
+@source "admin/recruiters/*.tsx";
+@source "admin/reports/*.tsx";
+@source "admin/settings/*.tsx";
+@source "admin/templates/*.tsx";
+@source "dashboard/*.tsx";
+@source "dashboard/assessments/*.tsx";
+@source "dashboard/candidates/*.tsx";
+@source "dashboard/candidates/[id]/*.tsx";
+@source "dashboard/jobs/new/*.tsx";
+@source "dashboard/profile/*.tsx";
+@source "dashboard/reports/*.tsx";
+@source "dashboard/upload/*.tsx";
+@source "login/*.tsx";
+@source "login/admin/*.tsx";
+@source "login/recruiter/*.tsx";
+@source "processing/[id]/*.tsx";
+@source "report/[id]/*.tsx";
+@source "screening/[jobId]/skills/*.tsx";
+@source "signup/*.tsx";
+/* tailwind-sources:end */
+
+@import "../styles/login.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins);
+  --color-navy: #0B1E3B;
+  --color-brand-red: #C8202A;
+  --color-brand-green: #1E9E5A;
+  --color-brand-amber: #E0A106;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #14202E;
+  --card: #ffffff;
+  --card-foreground: #14202E;
+  --popover: #ffffff;
+  --popover-foreground: #14202E;
+  --primary: #0B1E3B;
+  --primary-foreground: #ffffff;
+  --secondary: #F6F8FB;
+  --secondary-foreground: #0B1E3B;
+  --muted: #F6F8FB;
+  --muted-foreground: #7A8798;
+  --accent: #FBE9EA;
+  --accent-foreground: #C8202A;
+  --destructive: #E24B4A;
+  --border: #E5E9F0;
+  --input: #E5E9F0;
+  --ring: #C8202A;
+  --chart-1: #1E9E5A;
+  --chart-2: #C8202A;
+  --chart-3: #E0A106;
+  --chart-4: #0B1E3B;
+  --chart-5: #7A8798;
+  --radius: 0.625rem;
+  --sidebar: #0B1E3B;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #C8202A;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #16294a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: #C8202A;
+}
+
+.dark {
+  --background: #081325;
+  --foreground: #f0f4f8;
+  --card: #0B1E3B;
+  --card-foreground: #f0f4f8;
+  --popover: #0B1E3B;
+  --popover-foreground: #f0f4f8;
+  --primary: #C8202A;
+  --primary-foreground: #ffffff;
+  --secondary: #16294a;
+  --secondary-foreground: #f0f4f8;
+  --muted: #16294a;
+  --muted-foreground: #9FB0C2;
+  --accent: #16294a;
+  --accent-foreground: #ff8a8f;
+  --destructive: #E24B4A;
+  --border: rgba(255,255,255,0.1);
+  --input: rgba(255,255,255,0.1);
+  --ring: #C8202A;
+  --sidebar: #050d1a;
+  --sidebar-foreground: #f0f4f8;
+  --sidebar-primary: #C8202A;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0B1E3B;
+  --sidebar-accent-foreground: #f0f4f8;
+  --sidebar-border: rgba(255,255,255,0.08);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+  html { @apply font-sans; }
+}
+
+.brand-logo-mark {
+  background: #fff;
+  padding: 5px 9px;
+  border-radius: 6px;
+  box-sizing: content-box;
+  display: block;
+  object-fit: contain;
+}
+
+@layer utilities {
+  .hirelens-gradient {
+    background: radial-gradient(ellipse at top right, rgba(200,32,42,0.10), transparent 58%),
+                radial-gradient(ellipse at bottom left, rgba(11,30,59,0.07), transparent 60%),
+                linear-gradient(180deg, #FBF4F4 0%, #fff 100%);
+  }
+  .dark .hirelens-gradient {
+    background: radial-gradient(ellipse at top right, rgba(200,32,42,0.14), transparent 58%),
+                radial-gradient(ellipse at bottom left, rgba(11,30,59,0.35), transparent 60%),
+                linear-gradient(180deg, #0a1528 0%, #081325 100%);
+  }
+  .accent-text { color: #C8202A; }
+  .under-mark {
+    width: 48px;
+    height: 3px;
+    background: #C8202A;
+    border-radius: 2px;
+    margin: 12px 0 20px;
+  }
+}
