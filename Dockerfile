@@ -10,11 +10,21 @@ COPY prisma ./prisma
 COPY prisma.config.ts ./
 RUN npm ci
 
+FROM base AS migrate-deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+# Full production dependency tree for `prisma migrate deploy` at container start.
+RUN npm ci --omit=dev --ignore-scripts
+
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Placeholder only for `next build` — real DATABASE_URL is set at runtime on Railway.
+ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
 RUN npm run build
 
 FROM base AS runner
@@ -35,15 +45,11 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/scripts/start-production.sh ./scripts/start-production.sh
 
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin/prisma* ./node_modules/.bin/
-RUN find ./node_modules/prisma -name "prisma_schema_build_bg.wasm" -exec cp {} ./node_modules/.bin/ \;
+COPY --from=migrate-deps /app/node_modules ./prisma-migrate/node_modules
 
 RUN chmod +x ./scripts/start-production.sh \
   && mkdir -p uploads reports \
-  && chown -R nextjs:nodejs uploads reports scripts/start-production.sh
+  && chown -R nextjs:nodejs uploads reports prisma-migrate scripts/start-production.sh
 
 USER nextjs
 EXPOSE 3000

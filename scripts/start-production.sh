@@ -7,7 +7,9 @@ mkdir -p "$UPLOAD_DIR" "$REPORT_DIR"
 
 if [ -n "$DATABASE_URL" ]; then
   echo "[HireLens] Applying database migrations..."
-  if [ -x "./node_modules/.bin/prisma" ]; then
+  if [ -x "./prisma-migrate/node_modules/.bin/prisma" ]; then
+    ./prisma-migrate/node_modules/.bin/prisma migrate deploy
+  elif [ -x "./node_modules/.bin/prisma" ]; then
     ./node_modules/.bin/prisma migrate deploy
   else
     npx prisma migrate deploy
