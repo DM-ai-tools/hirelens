@@ -64,6 +64,6 @@ RUN chmod +x ./scripts/start-production.sh \
   && chown -R nextjs:nodejs uploads reports prisma-migrate scripts/start-production.sh
 
 USER nextjs
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["sh", "scripts/start-production.sh"]
