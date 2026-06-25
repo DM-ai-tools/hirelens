@@ -11,7 +11,9 @@ const globalForPrisma = globalThis as unknown as {
 /** Bump when `prisma/schema.prisma` changes so dev hot-reload picks up a fresh client. */
 const PRISMA_SCHEMA_VERSION = 2;
 
-function createPrismaClient() {
+let prismaSingleton: PrismaClient | undefined;
+
+function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set");
@@ -24,12 +26,35 @@ function createPrismaClient() {
   });
 }
 
-export const prisma =
-  globalForPrisma.prismaSchemaVersion === PRISMA_SCHEMA_VERSION && globalForPrisma.prisma
-    ? globalForPrisma.prisma
-    : createPrismaClient();
+function getPrismaClient(): PrismaClient {
+  if (prismaSingleton) return prismaSingleton;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-  globalForPrisma.prismaSchemaVersion = PRISMA_SCHEMA_VERSION;
+  if (
+    globalForPrisma.prisma &&
+    globalForPrisma.prismaSchemaVersion === PRISMA_SCHEMA_VERSION
+  ) {
+    prismaSingleton = globalForPrisma.prisma;
+    return prismaSingleton;
+  }
+
+  prismaSingleton = createPrismaClient();
+
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = prismaSingleton;
+    globalForPrisma.prismaSchemaVersion = PRISMA_SCHEMA_VERSION;
+  }
+
+  return prismaSingleton;
 }
+
+/**
+ * Lazy Prisma client — defers connection until first query so `next build` does not
+ * require DATABASE_URL (Railway/Docker only inject it at runtime).
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
