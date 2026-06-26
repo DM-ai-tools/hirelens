@@ -81,7 +81,7 @@ export function buildAssessmentLinksHtml(
   return `<ul style="margin:12px 0;padding-left:20px;line-height:1.7">${items.join("")}</ul>`;
 }
 
-function isUploadBlob(entry: FormDataEntryValue): entry is File | Blob {
+function isUploadBlob(entry: FormDataEntryValue): entry is File {
   return (
     typeof entry === "object" &&
     entry !== null &&
