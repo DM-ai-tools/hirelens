@@ -73,6 +73,7 @@ model Job {
   id                String      @id @default(cuid())
   title             String
   department        String?
+  roleTag           String?
   location          String?
   employmentType    String?
   minExperience     Float       @default(0)

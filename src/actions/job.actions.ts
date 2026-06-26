@@ -66,6 +66,7 @@ export async function startScreeningAction(formData: FormData) {
       : 0;
   const scoreThreshold = parseFloat(formData.get("scoreThreshold") as string) || 70;
   const mandatoryRequirements = ((formData.get("mandatoryRequirements") as string) || "").trim();
+  const roleTag = ((formData.get("roleTag") as string) || "").trim() || null;
 
   const jdFile = formData.get("jdFile") as File | null;
   let jdFilePath: string | undefined;
@@ -107,6 +108,7 @@ export async function startScreeningAction(formData: FormData) {
   const job = await prisma.job.create({
     data: {
       title: finalTitle,
+      roleTag,
       jdText,
       jdFilePath,
       minExperience,

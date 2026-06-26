@@ -32,6 +32,7 @@ export function ScreeningForm({
   const [title, setTitle] = useState("");
   const [jdText, setJdText] = useState("");
   const [selectedLibraryJdId, setSelectedLibraryJdId] = useState("");
+  const [roleTag, setRoleTag] = useState("");
   const [minExperience, setMinExperience] = useState("5");
   const [internalThreshold, setInternalThreshold] = useState("70");
   const scoreThreshold = scoreThresholdProp ?? internalThreshold;
@@ -44,6 +45,7 @@ export function ScreeningForm({
     }
     setSelectedLibraryJdId("");
     setJdFile(file);
+    setRoleTag("");
   }, []);
 
   function handleLibraryJdSelect(id: string) {
@@ -53,11 +55,13 @@ export function ScreeningForm({
     if (!saved) return;
     setJdText(saved.jdText);
     setTitle(saved.title);
+    setRoleTag(saved.roleTag ?? "");
     setJdFile(null);
   }
 
   function handleJdTextChange(value: string) {
     setSelectedLibraryJdId("");
+    setRoleTag("");
     setJdText(value);
   }
 
@@ -102,6 +106,7 @@ export function ScreeningForm({
     setLoading(true);
     const formData = new FormData(form);
     formData.set("title", title);
+    formData.set("roleTag", roleTag);
     formData.set("jdText", trimmedJdText);
     formData.set("minExperience", minExperience);
     formData.set("scoreThreshold", scoreThreshold);
@@ -138,6 +143,21 @@ export function ScreeningForm({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Senior Frontend Engineer"
         />
+      </div>
+
+      <div className="field">
+        <label>Role tag</label>
+        <input
+          type="text"
+          name="roleTag"
+          value={roleTag}
+          onChange={(e) => setRoleTag(e.target.value)}
+          placeholder="e.g. Full Stack Developer — used to match assessments on the report"
+        />
+        <p className="form-hint">
+          Optional. Should match the role tag on assessments in Admin. Filled automatically when you
+          pick a saved job description.
+        </p>
       </div>
 
       <div className="field">

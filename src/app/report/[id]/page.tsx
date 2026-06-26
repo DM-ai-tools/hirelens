@@ -56,6 +56,7 @@ export default async function ReportPage({
   const matchedAssessments = filterAssessmentsForJob(assessments, {
     title: job.title,
     department: job.department,
+    roleTag: job.roleTag,
   });
 
   const evaluatedCandidates = job.candidates.filter(

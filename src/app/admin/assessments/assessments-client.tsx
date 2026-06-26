@@ -538,7 +538,7 @@ function AssessmentForm({
           name="roleTag"
           value={roleTag}
           onChange={(e) => setRoleTag(e.target.value)}
-          placeholder="e.g. Senior React Developer, Engineering"
+          placeholder="e.g. Full Stack Developer — should match the job title or role tag on the report"
           className="mt-1"
         />
       </div>
