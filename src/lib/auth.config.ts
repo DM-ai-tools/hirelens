@@ -29,7 +29,7 @@ export const authConfig = {
       const { pathname } = request.nextUrl;
       const isLoggedIn = !!auth?.user;
 
-      if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/health")) {
+      if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/health") || pathname.startsWith("/api/version")) {
         return true;
       }
 

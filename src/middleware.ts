@@ -10,7 +10,8 @@ export default auth((req) => {
     !req.auth &&
     pathname.startsWith("/api") &&
     !pathname.startsWith("/api/auth") &&
-    !pathname.startsWith("/api/health")
+    !pathname.startsWith("/api/health") &&
+    !pathname.startsWith("/api/version")
   ) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -22,6 +22,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG APP_BUILD_ID=e24df13-features
+RUN echo "HireLens build ${APP_BUILD_ID}"
 ENV NEXT_TELEMETRY_DISABLED=1
 # Placeholder only for `next build` — real DATABASE_URL is set at runtime on Railway.
 ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
