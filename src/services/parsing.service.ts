@@ -91,7 +91,9 @@ async function parseResumeDocumentToMarkdown(
   const ext = path.extname(fileName).toLowerCase();
 
   if (ext === ".docx" || ext === ".doc" || ext === ".odt") {
-    const mammoth = await import("mammoth");
+    const mammoth = (await import("mammoth")) as unknown as {
+      convertToMarkdown(input: { buffer: Buffer }): Promise<{ value: string }>;
+    };
     const buffer = await readFile(filePath);
     const result = await mammoth.convertToMarkdown({ buffer });
     return normalizeResumeMarkdown(result.value || plainTextToResumeMarkdown(plainText));
