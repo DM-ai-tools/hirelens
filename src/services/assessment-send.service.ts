@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { SendStatus } from "@prisma/client";
-import { readUploadFile } from "@/lib/storage";
+import { readAssessmentFileContent } from "@/lib/assessment-file-content";
 import {
   replaceTemplateVars,
   formatDeadlineDisplay,
@@ -96,7 +96,7 @@ export async function sendConfiguredAssessmentEmails(params: {
     for (const file of getAssessmentFiles(assessment)) {
       attachments.push({
         filename: file.fileName || path.basename(file.filePath).replace(/^\d+-/, ""),
-        content: await readUploadFile(file.filePath),
+        content: await readAssessmentFileContent(file),
       });
     }
   }

@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { verifyAssessmentDownloadToken } from "@/lib/assessment-download-token";
-import { getMimeType, readUploadFile, resolveUploadPath } from "@/lib/storage";
+import { readAssessmentFileContent } from "@/lib/assessment-file-content";
+import { getMimeType } from "@/lib/storage";
 import path from "path";
 import { NextResponse } from "next/server";
 
@@ -35,12 +36,11 @@ export async function requireAssessmentDownloadAccess(
 }
 
 export async function serveAssessmentFile(
-  filePath: string,
   fileName: string,
+  source: { filePath: string; fileData?: Buffer | Uint8Array | null },
   options?: { download?: boolean }
 ) {
-  const resolvedPath = await resolveUploadPath(filePath, "assessments");
-  const buffer = await readUploadFile(resolvedPath);
+  const buffer = await readAssessmentFileContent(source);
   const mime = getMimeType(fileName);
   const safeName = fileName.replace(/"/g, "");
   const disposition = options?.download ? "attachment" : "inline";

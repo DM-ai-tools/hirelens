@@ -100,12 +100,14 @@ export async function deleteRecruiter(id: string) {
 
 async function saveAssessmentFiles(assessmentId: string, files: File[], startOrder = 0) {
   for (const [offset, file] of files.entries()) {
+    const fileData = Buffer.from(await file.arrayBuffer());
     const saved = await saveUpload(file, "assessments");
     await prisma.assessmentFile.create({
       data: {
         assessmentId,
         filePath: saved.filePath,
         fileName: saved.fileName,
+        fileData,
         mimeType: getMimeType(saved.fileName),
         sizeBytes: file.size,
         sortOrder: startOrder + offset,

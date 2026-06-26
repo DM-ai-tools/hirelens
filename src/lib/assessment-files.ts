@@ -5,6 +5,7 @@ export type AssessmentFileView = {
   id: string;
   fileName: string;
   filePath: string;
+  fileData?: Buffer | Uint8Array | null;
   mimeType?: string | null;
   sizeBytes?: number | null;
 };

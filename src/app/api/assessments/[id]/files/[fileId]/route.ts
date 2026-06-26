@@ -1,9 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import {
-  displayFileName,
-  requireAssessmentDownloadAccess,
-  serveAssessmentFile,
-} from "@/lib/assessment-file-route";
+import { displayFileName, requireAssessmentDownloadAccess, serveAssessmentFile } from "@/lib/assessment-file-route";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -26,8 +22,8 @@ export async function GET(
   try {
     const download = new URL(request.url).searchParams.get("download") === "1";
     return await serveAssessmentFile(
-      fileRecord.filePath,
       displayFileName(fileRecord.filePath, fileRecord.fileName),
+      { filePath: fileRecord.filePath, fileData: fileRecord.fileData },
       { download }
     );
   } catch (error) {

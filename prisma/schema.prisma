@@ -148,6 +148,7 @@ model AssessmentFile {
   assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   filePath     String
   fileName     String
+  fileData     Bytes?
   mimeType     String?
   sizeBytes    Int?
   sortOrder    Int        @default(0)

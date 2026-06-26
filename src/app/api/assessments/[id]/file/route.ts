@@ -31,8 +31,8 @@ export async function GET(
   try {
     const download = new URL(request.url).searchParams.get("download") === "1";
     return await serveAssessmentFile(
-      file.filePath,
       displayFileName(file.filePath, file.fileName),
+      { filePath: file.filePath, fileData: file.fileData },
       { download }
     );
   } catch (error) {
