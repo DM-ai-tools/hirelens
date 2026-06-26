@@ -1,4 +1,5 @@
 import path from "path";
+import { buildAssessmentFileDownloadUrl } from "@/lib/assessment-download";
 
 export type AssessmentFileView = {
   id: string;
@@ -54,10 +55,11 @@ export function primaryAssessmentLink(
   const files = getAssessmentFiles(assessment);
   if (files.length === 0) return "#";
   const file = files[0];
-  if (file.id === "legacy") {
-    return `${baseUrl}/api/assessments/${assessment.id}/file`;
-  }
-  return `${baseUrl}/api/assessments/${assessment.id}/files/${file.id}`;
+  return buildAssessmentFileDownloadUrl(
+    baseUrl,
+    assessment.id,
+    file.id === "legacy" ? undefined : file.id
+  );
 }
 
 export function buildAssessmentLinksHtml(
@@ -69,10 +71,11 @@ export function buildAssessmentLinksHtml(
       return [`<li><a href="${a.url}">${a.name}</a></li>`];
     }
     return getAssessmentFiles(a).map((f) => {
-      const href =
-        f.id === "legacy"
-          ? `${baseUrl}/api/assessments/${a.id}/file`
-          : `${baseUrl}/api/assessments/${a.id}/files/${f.id}`;
+      const href = buildAssessmentFileDownloadUrl(
+        baseUrl,
+        a.id,
+        f.id === "legacy" ? undefined : f.id
+      );
       const label = getAssessmentFiles(a).length > 1 ? `${a.name} — ${f.fileName}` : a.name;
       return `<li><a href="${href}">${label}</a></li>`;
     });

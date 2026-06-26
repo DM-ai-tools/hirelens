@@ -13,6 +13,7 @@ import {
   primaryAssessmentLink,
 } from "@/lib/assessment-files";
 import { loadAssessmentsWithFilesByIds } from "@/lib/assessment-queries";
+import { getAppBaseUrl } from "@/lib/assessment-download";
 import path from "path";
 
 async function getResendClient() {
@@ -82,7 +83,7 @@ export async function sendConfiguredAssessmentEmails(params: {
   const companyName = settings?.companyName || "DOTMappers";
   const recruiterName = sender?.name || "Talent Acquisition Team";
   const deadlineStr = formatDeadlineDisplay(params.deadline, params.timezone);
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3001";
+  const baseUrl = getAppBaseUrl();
   const assessmentName = assessments.map((a) => a.name).join(", ");
   const primaryLink = primaryAssessmentLink(assessments[0], baseUrl);
 

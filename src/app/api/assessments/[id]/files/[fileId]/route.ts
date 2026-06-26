@@ -1,31 +1,19 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { readUploadFile, getMimeType } from "@/lib/storage";
+import {
+  displayFileName,
+  requireAssessmentDownloadAccess,
+  serveAssessmentFile,
+} from "@/lib/assessment-file-route";
 import { NextResponse } from "next/server";
 
-async function serveFile(filePath: string, fileName: string) {
-  const buffer = await readUploadFile(filePath);
-  const mime = getMimeType(fileName);
-
-  return new NextResponse(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": mime,
-      "Content-Disposition": `inline; filename="${fileName.replace(/"/g, "")}"`,
-      "Cache-Control": "private, max-age=3600",
-    },
-  });
-}
-
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string; fileId: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { id, fileId } = await params;
+  const denied = await requireAssessmentDownloadAccess(request, id, fileId);
+  if (denied) return denied;
+
   const fileRecord = await prisma.assessmentFile.findFirst({
     where: { id: fileId, assessmentId: id },
     include: { assessment: true },
@@ -36,8 +24,14 @@ export async function GET(
   }
 
   try {
-    return await serveFile(fileRecord.filePath, fileRecord.fileName);
-  } catch {
+    const download = new URL(request.url).searchParams.get("download") === "1";
+    return await serveAssessmentFile(
+      fileRecord.filePath,
+      displayFileName(fileRecord.filePath, fileRecord.fileName),
+      { download }
+    );
+  } catch (error) {
+    console.error(`[AssessmentFile] Failed to serve ${fileRecord.filePath}:`, error);
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 }

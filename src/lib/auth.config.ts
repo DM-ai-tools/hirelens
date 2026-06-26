@@ -8,6 +8,10 @@ function isPublicPath(pathname: string) {
   return false;
 }
 
+function isAssessmentDownloadPath(pathname: string): boolean {
+  return /^\/api\/assessments\/[^/]+(\/file|\/files\/[^/]+)$/.test(pathname);
+}
+
 export const authConfig = {
   pages: {
     signIn: "/login",
@@ -30,6 +34,10 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
 
       if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/health") || pathname.startsWith("/api/version")) {
+        return true;
+      }
+
+      if (isAssessmentDownloadPath(pathname)) {
         return true;
       }
 

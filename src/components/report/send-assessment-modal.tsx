@@ -55,7 +55,8 @@ export type SendAssessmentModalProps = {
     type: string;
     url: string | null;
     hasFile: boolean;
-    files: Array<{ id: string; fileName: string }>;
+    files: Array<{ id: string; fileName: string; downloadUrl: string }>;
+    primaryDownloadUrl?: string | null;
   }>;
   dbTemplates: Array<{ id: string; name: string; subject: string; bodyHtml: string }>;
   initialAssessmentIds?: string[];
@@ -194,12 +195,14 @@ export function SendAssessmentModal({
   const previewVars = useMemo((): EmailTemplateVars | null => {
     if (!previewCandidate) return null;
     const deadline = deadlineFromParts(deadlineDate, deadlineTime, timezone);
-    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const primary = selectedAssessments[0];
     const link =
-      selectedAssessments.length === 1 && primaryAssessment?.type === "LINK" && primaryAssessment.url
-        ? primaryAssessment.url
-        : selectedAssessments.length === 1 && primaryAssessment?.hasFile
-          ? `${base}/api/assessments/${primaryAssessment.id}/file`
+      selectedAssessments.length === 1 && primary?.type === "LINK" && primary.url
+        ? primary.url
+        : selectedAssessments.length === 1 && primary
+          ? primary.primaryDownloadUrl ||
+            primary.files[0]?.downloadUrl ||
+            "{{assessment_link}}"
           : "{{assessment_link}}";
 
     return {
@@ -217,7 +220,6 @@ export function SendAssessmentModal({
   }, [
     previewCandidate,
     selectedAssessments,
-    primaryAssessment,
     deadlineDate,
     deadlineTime,
     timezone,

@@ -34,6 +34,7 @@ import { toast } from "sonner";
 type AssessmentFile = {
   id: string;
   fileName: string;
+  downloadUrl?: string;
 };
 
 type Assessment = {
@@ -46,6 +47,7 @@ type Assessment = {
   description: string | null;
   active: boolean;
   files: AssessmentFile[];
+  primaryDownloadUrl?: string | null;
 };
 
 function fileCount(a: Assessment) {
@@ -185,9 +187,11 @@ export default function AssessmentsClient({ assessments }: { assessments: Assess
                     <a
                       key={f.id}
                       href={
-                        f.id === "legacy"
-                          ? `/api/assessments/${a.id}/file`
-                          : `/api/assessments/${a.id}/files/${f.id}`
+                        f.downloadUrl
+                          ? `${f.downloadUrl}&download=1`
+                          : f.id === "legacy"
+                            ? `/api/assessments/${a.id}/file`
+                            : `/api/assessments/${a.id}/files/${f.id}`
                       }
                       target="_blank"
                       rel="noopener noreferrer"

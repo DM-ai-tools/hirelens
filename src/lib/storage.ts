@@ -1,4 +1,4 @@
-import { mkdir, writeFile, readFile } from "fs/promises";
+import { mkdir, writeFile, readFile, access } from "fs/promises";
 import path from "path";
 import { REPORT_DIR } from "./constants";
 
@@ -11,8 +11,48 @@ function resolveUploadDir() {
 
 const UPLOAD_ROOT = resolveUploadDir();
 
+export function getUploadRoot(): string {
+  return UPLOAD_ROOT;
+}
+
 export async function ensureDir(dir: string) {
   await mkdir(dir, { recursive: true });
+}
+
+export async function resolveUploadPath(filePath: string, subdir?: string): Promise<string> {
+  const basename = path.basename(filePath);
+  const candidates = new Set<string>([filePath]);
+
+  if (!path.isAbsolute(filePath)) {
+    candidates.add(path.join(UPLOAD_ROOT, filePath));
+  }
+
+  const normalized = filePath.replace(/\\/g, "/");
+  const uploadsMarker = "/uploads/";
+  const uploadsIdx = normalized.lastIndexOf(uploadsMarker);
+  if (uploadsIdx >= 0) {
+    candidates.add(path.join(UPLOAD_ROOT, normalized.slice(uploadsIdx + uploadsMarker.length)));
+  }
+
+  if (subdir) {
+    candidates.add(path.join(UPLOAD_ROOT, subdir, basename));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error(`Upload file not found: ${filePath}`);
+}
+
+export async function readUploadFile(filePath: string): Promise<Buffer> {
+  const resolved = await resolveUploadPath(filePath);
+  return readFile(resolved);
 }
 
 export async function saveUpload(
@@ -39,10 +79,6 @@ export async function saveBuffer(
   const filePath = path.join(dir, fileName);
   await writeFile(filePath, buffer);
   return filePath;
-}
-
-export async function readUploadFile(filePath: string): Promise<Buffer> {
-  return readFile(filePath);
 }
 
 export function getMimeType(fileName: string): string {

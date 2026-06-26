@@ -22,7 +22,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG APP_BUILD_ID=assessment-match-fix
+ARG APP_BUILD_ID=assessment-download-fix
 RUN echo "HireLens build ${APP_BUILD_ID}"
 ENV NEXT_TELEMETRY_DISABLED=1
 # Placeholder only for `next build` — real DATABASE_URL is set at runtime on Railway.

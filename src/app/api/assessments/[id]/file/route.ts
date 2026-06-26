@@ -1,20 +1,20 @@
-import { auth } from "@/lib/auth";
 import { getAssessmentFiles } from "@/lib/assessment-files";
 import { loadAssessmentWithFiles } from "@/lib/assessment-queries";
-import { readUploadFile, getMimeType } from "@/lib/storage";
-import path from "path";
+import {
+  displayFileName,
+  requireAssessmentDownloadAccess,
+  serveAssessmentFile,
+} from "@/lib/assessment-file-route";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { id } = await params;
+  const denied = await requireAssessmentDownloadAccess(request, id, "legacy");
+  if (denied) return denied;
+
   const assessment = await loadAssessmentWithFiles(id);
 
   if (!assessment || assessment.type !== "ATTACHMENT") {
@@ -29,18 +29,14 @@ export async function GET(
   const file = files[0];
 
   try {
-    const buffer = await readUploadFile(file.filePath);
-    const fileName = file.fileName || path.basename(file.filePath).replace(/^\d+-/, "");
-    const mime = getMimeType(fileName);
-
-    return new NextResponse(new Uint8Array(buffer), {
-      headers: {
-        "Content-Type": mime,
-        "Content-Disposition": `inline; filename="${fileName.replace(/"/g, "")}"`,
-        "Cache-Control": "private, max-age=3600",
-      },
-    });
-  } catch {
+    const download = new URL(request.url).searchParams.get("download") === "1";
+    return await serveAssessmentFile(
+      file.filePath,
+      displayFileName(file.filePath, file.fileName),
+      { download }
+    );
+  } catch (error) {
+    console.error(`[AssessmentFile] Failed to serve ${file.filePath}:`, error);
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 }

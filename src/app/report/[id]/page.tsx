@@ -6,6 +6,7 @@ import { getModelDisplayName } from "@/lib/constants";
 import { sanitizeExperienceIntelligence } from "@/lib/experience-intelligence.utils";
 import { resolveCandidateLocation } from "@/lib/resume-location";
 import { filterAssessmentsForJob } from "@/lib/assessment-match";
+import { buildAssessmentFileDownloadUrl, getAppBaseUrl } from "@/lib/assessment-download";
 import { assessmentHasFiles } from "@/lib/assessment-files";
 import { loadAssessmentsWithFiles } from "@/lib/assessment-queries";
 import { ReportClient } from "@/components/report/report-client";
@@ -53,6 +54,7 @@ export default async function ReportPage({
 
   if (!job) notFound();
 
+  const appBaseUrl = getAppBaseUrl();
   const matchedAssessments = filterAssessmentsForJob(assessments, {
     title: job.title,
     department: job.department,
@@ -222,7 +224,17 @@ export default async function ReportPage({
         roleTag: a.roleTag,
         description: a.description,
         hasFile: assessmentHasFiles(a),
-        files: a.files.map((f) => ({ id: f.id, fileName: f.fileName })),
+        files: a.files.map((f) => ({
+          id: f.id,
+          fileName: f.fileName,
+          downloadUrl: buildAssessmentFileDownloadUrl(appBaseUrl, a.id, f.id),
+        })),
+        primaryDownloadUrl:
+          a.files.length > 0
+            ? buildAssessmentFileDownloadUrl(appBaseUrl, a.id, a.files[0].id)
+            : a.filePath
+              ? buildAssessmentFileDownloadUrl(appBaseUrl, a.id)
+              : null,
       }))}
       companyName={settings?.companyName ?? "DOTMappers"}
       recruiterName={session?.user?.name ?? "Recruiter"}

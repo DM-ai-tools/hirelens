@@ -3,8 +3,16 @@ import { authConfig } from "@/lib/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
+function isAssessmentDownloadPath(pathname: string): boolean {
+  return /^\/api\/assessments\/[^/]+(\/file|\/files\/[^/]+)$/.test(pathname);
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+
+  if (isAssessmentDownloadPath(pathname)) {
+    return;
+  }
 
   if (
     !req.auth &&

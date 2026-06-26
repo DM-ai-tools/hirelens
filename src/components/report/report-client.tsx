@@ -52,7 +52,8 @@ interface ReportClientProps {
     roleTag: string | null;
     description: string | null;
     hasFile: boolean;
-    files: Array<{ id: string; fileName: string }>;
+    files: Array<{ id: string; fileName: string; downloadUrl: string }>;
+    primaryDownloadUrl?: string | null;
   }[];
   companyName: string;
   recruiterName: string;
@@ -724,7 +725,7 @@ export function ReportClient({
                           a.files.map((f) => (
                             <a
                               key={f.id}
-                              href={`/api/assessments/${a.id}/files/${f.id}`}
+                              href={`${f.downloadUrl}&download=1`}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{ color: "var(--red)", display: "block" }}
@@ -733,8 +734,14 @@ export function ReportClient({
                               {f.fileName}
                             </a>
                           ))
-                        ) : a.hasFile ? (
-                          <a href={`/api/assessments/${a.id}/file`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--red)" }} onClick={(e) => e.stopPropagation()}>
+                        ) : a.hasFile && a.primaryDownloadUrl ? (
+                          <a
+                            href={`${a.primaryDownloadUrl}&download=1`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "var(--red)" }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             Preview document
                           </a>
                         ) : null}
