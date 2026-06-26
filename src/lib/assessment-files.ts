@@ -81,8 +81,32 @@ export function buildAssessmentLinksHtml(
   return `<ul style="margin:12px 0;padding-left:20px;line-height:1.7">${items.join("")}</ul>`;
 }
 
+function isUploadBlob(entry: FormDataEntryValue): entry is File | Blob {
+  return (
+    typeof entry === "object" &&
+    entry !== null &&
+    "arrayBuffer" in entry &&
+    typeof (entry as Blob).arrayBuffer === "function" &&
+    (entry as Blob).size > 0
+  );
+}
+
+/** Reads one or more uploaded files from a server-action FormData payload. */
 export function collectFilesFromFormData(formData: FormData): File[] {
-  return formData
-    .getAll("files")
-    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  const files: File[] = [];
+
+  for (const entry of formData.getAll("files")) {
+    if (!isUploadBlob(entry)) continue;
+    if (entry instanceof File) {
+      files.push(entry);
+      continue;
+    }
+    files.push(
+      new File([entry], `assessment-file-${files.length + 1}`, {
+        type: entry.type || "application/octet-stream",
+      })
+    );
+  }
+
+  return files;
 }

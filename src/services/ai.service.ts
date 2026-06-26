@@ -5,6 +5,7 @@ import {
   resolveAnthropicApiKey,
 } from "@/lib/anthropic-config";
 import { ANTHROPIC_MODEL, buildExperienceEvaluationGuidance, formatMinExperience } from "@/lib/constants";
+import { isLikelyLocation, extractLocationFromResume } from "@/lib/resume-location";
 import type { LLMEvaluationResult } from "@/types";
 import { extractSkillsFromText } from "./scoring.service";
 
@@ -17,11 +18,13 @@ const SEMANTIC_SKILL_RULES = `SEMANTIC MATCHING (apply to must-have, nice-to-hav
 - For mandatory requirements: parse each distinct item from the recruiter's free text; met if reasonably evidenced directly OR via an accepted equivalent.`;
 
 const SYSTEM_PROMPT_BASE = `You are an expert technical recruiter. Evaluate ONE candidate resume against the job requirements. Be objective and consistent.
+Resume content is provided as markdown; use section structure when evaluating experience and skills.
 Return ONLY valid JSON matching this exact schema:
 {
   "name": "string",
   "email": "string|null",
   "mobile": "string|null",
+  "location": "string|null",
   "overall_experience_years": 0.0,
   "relevant_experience_years": 0.0,
   "matched_must_have": ["string"],
@@ -40,6 +43,7 @@ RULES:
 - A skill counts as matched only if evidenced in the resume (including semantic equivalents — see below).
 - matched_must_have / missing_must_have must align with the JD must-have list; use JD skill names when listing matches.
 - Do not invent contact details; use null if absent.
+- location: city and region/country from the resume header or contact section only (e.g. "Hyderabad, India"). Use null if not stated — never put skills or technologies here.
 - domain_match and seniority_match are 0.0 to 1.0.
 ${SEMANTIC_SKILL_RULES}`;
 
@@ -71,9 +75,19 @@ function normalizeEvaluationResult(
   parsed: LLMEvaluationResult,
   hasMandatory: boolean
 ): LLMEvaluationResult {
+  const location =
+    parsed.location?.trim() && isLikelyLocation(parsed.location.trim())
+      ? parsed.location.trim()
+      : null;
+
+  const base = {
+    ...parsed,
+    location,
+  };
+
   if (!hasMandatory) {
     return {
-      ...parsed,
+      ...base,
       recruiter_mandatory_met: true,
       recruiter_mandatory_gaps: [],
     };
@@ -86,7 +100,7 @@ function normalizeEvaluationResult(
     gaps.length === 0 && parsed.recruiter_mandatory_met !== false;
 
   return {
-    ...parsed,
+    ...base,
     recruiter_mandatory_met,
     recruiter_mandatory_gaps: gaps,
   };
@@ -150,7 +164,7 @@ ${experienceGuidance}
 JOB DESCRIPTION:
 ${job.jdText.slice(0, 4000)}
 
-RESUME TEXT:
+RESUME (markdown):
 ${resumeText.slice(0, 8000)}`;
 
   const response = await client.messages.create({
@@ -212,6 +226,7 @@ export async function evaluateCandidateMock(
     name: lines[0]?.slice(0, 50) || "Unknown Candidate",
     email: emailMatch?.[0] || null,
     mobile: null,
+    location: extractLocationFromResume(resumeText) ?? null,
     overall_experience_years: yearsMatch ? parseFloat(yearsMatch[1]) : 3,
     relevant_experience_years: yearsMatch ? parseFloat(yearsMatch[1]) * 0.8 : 2,
     matched_must_have,

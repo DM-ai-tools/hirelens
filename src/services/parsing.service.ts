@@ -1,6 +1,12 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import type { ParsedResume } from "@/types";
+import {
+  isStructuredMarkdown,
+  normalizeResumeMarkdown,
+  plainTextToResumeMarkdown,
+} from "@/lib/resume-markdown";
+import { extractLocationFromResume } from "@/lib/resume-location";
 
 /** Extract plain text from a job description or resume document. */
 export async function parseDocumentToText(
@@ -49,6 +55,14 @@ export async function parseResumeFile(
   filePath: string,
   fileName: string
 ): Promise<ParsedResume> {
+  const plainText = await extractResumePlainText(filePath, fileName);
+  const markdown = await parseResumeDocumentToMarkdown(filePath, fileName, plainText);
+  const parsed = extractFields(plainText);
+  parsed.rawText = markdown;
+  return parsed;
+}
+
+async function extractResumePlainText(filePath: string, fileName: string): Promise<string> {
   const ext = path.extname(fileName).toLowerCase();
   let rawText = "";
 
@@ -66,7 +80,28 @@ export async function parseResumeFile(
     throw new Error(`Unsupported file type: ${ext}`);
   }
 
-  return extractFields(rawText);
+  return rawText.trim();
+}
+
+async function parseResumeDocumentToMarkdown(
+  filePath: string,
+  fileName: string,
+  plainText: string
+): Promise<string> {
+  const ext = path.extname(fileName).toLowerCase();
+
+  if (ext === ".docx" || ext === ".doc" || ext === ".odt") {
+    const mammoth = await import("mammoth");
+    const buffer = await readFile(filePath);
+    const result = await mammoth.convertToMarkdown({ buffer });
+    return normalizeResumeMarkdown(result.value || plainTextToResumeMarkdown(plainText));
+  }
+
+  if (ext === ".md" && isStructuredMarkdown(plainText)) {
+    return normalizeResumeMarkdown(plainText);
+  }
+
+  return plainTextToResumeMarkdown(plainText);
 }
 
 async function parsePdf(filePath: string): Promise<string> {
@@ -98,21 +133,23 @@ async function parseDocx(filePath: string): Promise<string> {
   return result.value || "";
 }
 
-function extractFields(rawText: string): ParsedResume {
-  const emails = rawText.match(EMAIL_REGEX) || [];
-  const phones = rawText.match(PHONE_REGEX) || [];
-  const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+function extractFields(plainText: string): ParsedResume {
+  const emails = plainText.match(EMAIL_REGEX) || [];
+  const phones = plainText.match(PHONE_REGEX) || [];
+  const lines = plainText.split("\n").map((l) => l.trim()).filter(Boolean);
   const name = lines[0]?.length < 60 ? lines[0] : undefined;
+  const location = extractLocationFromResume(plainText);
 
   return {
     name,
     email: emails[0],
     phone: phones[0],
-    skills: extractSkillsFromResume(rawText),
-    experience: extractExperience(rawText),
-    education: extractEducation(rawText),
-    projects: extractProjects(rawText),
-    rawText,
+    location,
+    skills: extractSkillsFromResume(plainText),
+    experience: extractExperience(plainText),
+    education: extractEducation(plainText),
+    projects: extractProjects(plainText),
+    rawText: "",
   };
 }
 

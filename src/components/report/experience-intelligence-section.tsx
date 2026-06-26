@@ -204,6 +204,7 @@ export function ExperienceIntelligenceSection({
                 <tr>
                   <th>Rank</th>
                   <th>Candidate</th>
+                  <th>Location</th>
                   <th>EI Score</th>
                   <th>Company</th>
                   <th>Role</th>
@@ -248,6 +249,7 @@ export function ExperienceIntelligenceSection({
                           <AgencyGoldBadge label={ei.agencyBadgeType} />
                         )}
                       </td>
+                      <td className="tiny">{c.location?.trim() || "—"}</td>
                       <td>
                         <span className={`sc ei-score ${expScoreClass(displayScore)}`}>
                           {displayScore?.toFixed(1) ?? "—"}

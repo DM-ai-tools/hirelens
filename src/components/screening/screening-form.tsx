@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { toast } from "sonner";
 import { isSupportedDocumentExtension } from "@/lib/document-formats";
+import type { JobDescriptionRecord } from "@/lib/job-description-queries";
 
 const JD_ACCEPT =
   ".pdf,.doc,.docx,.txt,.md,.rtf,.odt,.html,.htm,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
@@ -13,11 +14,13 @@ const JD_ACCEPT =
 interface ScreeningFormProps {
   scoreThreshold?: string;
   onScoreThresholdChange?: (value: string) => void;
+  savedJobDescriptions?: JobDescriptionRecord[];
 }
 
 export function ScreeningForm({
   scoreThreshold: scoreThresholdProp,
   onScoreThresholdChange,
+  savedJobDescriptions = [],
 }: ScreeningFormProps = {}) {
   const router = useRouter();
   const { status } = useSession();
@@ -26,6 +29,9 @@ export function ScreeningForm({
   const [jdDragOver, setJdDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [title, setTitle] = useState("");
+  const [jdText, setJdText] = useState("");
+  const [selectedLibraryJdId, setSelectedLibraryJdId] = useState("");
   const [minExperience, setMinExperience] = useState("5");
   const [internalThreshold, setInternalThreshold] = useState("70");
   const scoreThreshold = scoreThresholdProp ?? internalThreshold;
@@ -36,8 +42,24 @@ export function ScreeningForm({
       toast.error("Unsupported JD format. Use PDF, DOCX, DOC, TXT, MD, RTF, or ODT.");
       return;
     }
+    setSelectedLibraryJdId("");
     setJdFile(file);
   }, []);
+
+  function handleLibraryJdSelect(id: string) {
+    setSelectedLibraryJdId(id);
+    if (!id) return;
+    const saved = savedJobDescriptions.find((jd) => jd.id === id);
+    if (!saved) return;
+    setJdText(saved.jdText);
+    setTitle(saved.title);
+    setJdFile(null);
+  }
+
+  function handleJdTextChange(value: string) {
+    setSelectedLibraryJdId("");
+    setJdText(value);
+  }
 
   const handleJdDrop = useCallback(
     (e: React.DragEvent) => {
@@ -71,14 +93,16 @@ export function ScreeningForm({
     }
 
     const form = e.currentTarget;
-    const jdText = (form.elements.namedItem("jdText") as HTMLTextAreaElement).value.trim();
-    if (!jdText && !jdFile) {
-      toast.error("Paste a job description or upload a JD document");
+    const trimmedJdText = jdText.trim();
+    if (!trimmedJdText && !jdFile) {
+      toast.error("Paste a job description, pick one from the library, or upload a JD document");
       return;
     }
 
     setLoading(true);
     const formData = new FormData(form);
+    formData.set("title", title);
+    formData.set("jdText", trimmedJdText);
     formData.set("minExperience", minExperience);
     formData.set("scoreThreshold", scoreThreshold);
     if (jdFile) formData.set("jdFile", jdFile);
@@ -106,16 +130,42 @@ export function ScreeningForm({
         <label>
           Job Title <span className="req">*</span>
         </label>
-        <input type="text" name="title" required placeholder="e.g. Senior Frontend Engineer" />
+        <input
+          type="text"
+          name="title"
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Senior Frontend Engineer"
+        />
       </div>
 
       <div className="field">
         <label>
           Job Description <span className="req">*</span>
         </label>
+        {savedJobDescriptions.length > 0 && (
+          <div className="radius-wrap" style={{ marginBottom: 10 }}>
+            <select
+              value={selectedLibraryJdId}
+              onChange={(e) => handleLibraryJdSelect(e.target.value)}
+              aria-label="Select a saved job description"
+            >
+              <option value="">Choose from saved job descriptions (optional)</option>
+              {savedJobDescriptions.map((jd) => (
+                <option key={jd.id} value={jd.id}>
+                  {jd.title}
+                  {jd.roleTag ? ` · ${jd.roleTag}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <textarea
           name="jdText"
-          placeholder="Paste the full job description — or upload a document below. Competencies in the file become must-have skills."
+          value={jdText}
+          onChange={(e) => handleJdTextChange(e.target.value)}
+          placeholder="Paste the full job description — pick from the library above, or upload a document below."
           rows={4}
         />
         <div

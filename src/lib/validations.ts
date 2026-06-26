@@ -81,6 +81,13 @@ export const emailTemplateSchema = z.object({
   active: z.boolean().default(true),
 });
 
+export const jobDescriptionSchema = z.object({
+  title: z.string().min(2, "Role title is required"),
+  roleTag: z.string().optional(),
+  jdText: z.string().min(30, "Job description must be at least 30 characters"),
+  active: z.boolean().default(true),
+});
+
 export const screeningFormSchema = z.object({
   title: z.string().min(2),
   jdText: z.string().min(50),

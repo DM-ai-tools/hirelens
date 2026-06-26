@@ -4,6 +4,7 @@ import { CandidateStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getModelDisplayName } from "@/lib/constants";
 import { sanitizeExperienceIntelligence } from "@/lib/experience-intelligence.utils";
+import { resolveCandidateLocation } from "@/lib/resume-location";
 import { filterAssessmentsForJob } from "@/lib/assessment-match";
 import { assessmentHasFiles } from "@/lib/assessment-files";
 import { loadAssessmentsWithFiles } from "@/lib/assessment-queries";
@@ -191,6 +192,7 @@ export default async function ReportPage({
             name: c.name,
             email: c.email,
             phone: c.phone,
+            location: resolveCandidateLocation(c),
             overallExperience: c.overallExperience,
             relevantExperience: c.relevantExperience,
             strengths: c.strengths,

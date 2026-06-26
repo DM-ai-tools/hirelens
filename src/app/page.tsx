@@ -4,14 +4,17 @@ import { TopBar, SiteNav } from "@/components/brand/brand-logo";
 import { DotMappersLogo } from "@/components/brand/dotmappers-logo";
 import { LandingHero } from "@/components/screening/landing-hero";
 import { BRAND } from "@/lib/constants";
+import { loadActiveJobDescriptions } from "@/lib/job-description-queries";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const savedJobDescriptions = await loadActiveJobDescriptions();
+
   return (
     <div className="hirelens-page">
       <TopBar />
       <SiteNav />
 
-      <LandingHero />
+      <LandingHero savedJobDescriptions={savedJobDescriptions} />
 
       <section id="how" className="block">
         <div className="block-inner text-center">

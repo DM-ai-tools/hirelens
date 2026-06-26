@@ -13,6 +13,7 @@ import {
   resolveAgencyBadgeForResult,
 } from "@/lib/experience-intelligence.utils";
 import { hasAnthropicApiKey, requireAnthropicApiKey } from "@/lib/anthropic-config";
+import { isLikelyLocation } from "@/lib/resume-location";
 import { enrichExperienceIntelligenceCompanies } from "./company-enrichment.service";
 import type {
   ExperienceIntelligenceBreakdown,
@@ -22,6 +23,7 @@ import type {
 } from "@/types";
 
 const SYSTEM_PROMPT = `You are an expert talent analyst evaluating the QUALITY of a candidate's professional experience — separate from skill-match against a job description.
+Resume content is provided as markdown; use section structure when evaluating experience and skills.
 
 Score experience intelligence based on:
 - Relevance of previous roles to the hiring role (35% weight — highest)
@@ -44,6 +46,7 @@ Return ONLY valid JSON matching this schema:
   "scoreRationale": "string — 2-4 sentences explaining the overall score",
   "currentCompany": "string",
   "currentRole": "string",
+  "candidateLocation": "string|null — city and region/country from resume header or contact section only (e.g. Hyderabad, India). null if not stated; never skills or employers.",
   "industry": "string",
   "experienceLevel": "Junior|Mid|Senior|Lead|Principal|Executive",
   "companyRating": "Exceptional|Strong|Moderate|Limited|Unknown",
@@ -205,6 +208,12 @@ function buildResultFromLlm(
     scoreRationale: String(parsed.scoreRationale ?? "Experience evaluated against role requirements."),
     currentCompany,
     currentRole,
+    candidateLocation:
+      parsed.candidateLocation &&
+      typeof parsed.candidateLocation === "string" &&
+      isLikelyLocation(parsed.candidateLocation)
+        ? parsed.candidateLocation.trim()
+        : null,
     industry: String(parsed.industry ?? "—"),
     experienceLevel: String(parsed.experienceLevel ?? "Mid"),
     companyRating: String(parsed.companyRating ?? "Moderate"),
@@ -257,7 +266,7 @@ JOB DESCRIPTION:
 ${job.jdText.slice(0, 3500)}
 ${parsedContext}
 
-RESUME:
+RESUME (markdown):
 ${resumeText.slice(0, 9000)}`;
 
   const response = await client.messages.create({

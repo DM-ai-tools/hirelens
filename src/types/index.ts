@@ -13,6 +13,7 @@ export interface LLMEvaluationResult {
   name: string;
   email: string | null;
   mobile: string | null;
+  location?: string | null;
   overall_experience_years: number;
   relevant_experience_years: number;
   matched_must_have: string[];
@@ -31,6 +32,7 @@ export interface ParsedResume {
   name?: string;
   email?: string;
   phone?: string;
+  location?: string;
   skills: string[];
   experience: Array<{ company: string; role: string; years: number }>;
   education: Array<{ degree: string; institution: string }>;
@@ -116,6 +118,7 @@ export interface ExperienceIntelligenceResult {
   scoreRationale: string;
   currentCompany: string;
   currentRole: string;
+  candidateLocation?: string | null;
   industry: string;
   experienceLevel: string;
   companyRating: string;

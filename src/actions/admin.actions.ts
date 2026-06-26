@@ -8,6 +8,7 @@ import {
   assessmentSchema,
   emailTemplateSchema,
   settingsSchema,
+  jobDescriptionSchema,
 } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -15,6 +16,7 @@ import { saveUpload, getMimeType } from "@/lib/storage";
 import { unlink } from "fs/promises";
 import { collectFilesFromFormData, getAssessmentFiles } from "@/lib/assessment-files";
 import { loadAssessmentWithFiles } from "@/lib/assessment-queries";
+import { parseJobDescriptionFile } from "@/services/parsing.service";
 
 async function requireAdmin() {
   const session = await auth();
@@ -246,6 +248,123 @@ export async function deleteAssessment(id: string) {
   await prisma.assessment.delete({ where: { id } });
   await audit(session.user.id, "DELETE_ASSESSMENT", "Assessment", { id });
   revalidatePath("/admin/assessments");
+}
+
+// ——— Job descriptions ———
+
+async function resolveJobDescriptionContent(formData: FormData, existing?: {
+  jdText: string;
+  filePath: string | null;
+  fileName: string | null;
+}) {
+  let jdText = ((formData.get("jdText") as string) || existing?.jdText || "").trim();
+  let filePath = existing?.filePath ?? null;
+  let fileName = existing?.fileName ?? null;
+
+  const jdFile = formData.get("jdFile") as File | null;
+  if (jdFile && jdFile.size > 0) {
+    const saved = await saveUpload(jdFile, "job-descriptions");
+    filePath = saved.filePath;
+    fileName = saved.fileName;
+    jdText = await parseJobDescriptionFile(saved.filePath, saved.fileName);
+  }
+
+  if (!jdText || jdText.length < 30) {
+    throw new Error("Job description must be at least 30 characters. Paste text or upload a document.");
+  }
+
+  return { jdText, filePath, fileName };
+}
+
+export async function createJobDescription(formData: FormData) {
+  const session = await requireAdmin();
+  const { jdText, filePath, fileName } = await resolveJobDescriptionContent(formData);
+
+  const data = jobDescriptionSchema.parse({
+    title: formData.get("title"),
+    roleTag: formData.get("roleTag") || undefined,
+    jdText,
+    active: formData.get("active") !== "false",
+  });
+
+  await prisma.jobDescription.create({
+    data: {
+      title: data.title,
+      roleTag: data.roleTag,
+      jdText: data.jdText,
+      filePath,
+      fileName,
+      active: data.active,
+    },
+  });
+
+  await audit(session.user.id, "CREATE_JOB_DESCRIPTION", "JobDescription", { title: data.title });
+  revalidatePath("/admin/job-descriptions");
+  revalidatePath("/");
+}
+
+export async function updateJobDescription(id: string, formData: FormData) {
+  const session = await requireAdmin();
+  const existing = await prisma.jobDescription.findUnique({ where: { id } });
+  if (!existing) throw new Error("Job description not found");
+
+  const removeFile = formData.get("removeFile") === "true";
+  let filePath = existing.filePath;
+  let fileName = existing.fileName;
+
+  if (removeFile && existing.filePath) {
+    await unlink(existing.filePath).catch(() => {});
+    filePath = null;
+    fileName = null;
+  }
+
+  const { jdText, filePath: nextPath, fileName: nextName } = await resolveJobDescriptionContent(
+    formData,
+    { jdText: existing.jdText, filePath, fileName }
+  );
+
+  const data = jobDescriptionSchema.parse({
+    title: formData.get("title"),
+    roleTag: formData.get("roleTag") || undefined,
+    jdText,
+    active: formData.get("active") !== "false",
+  });
+
+  await prisma.jobDescription.update({
+    where: { id },
+    data: {
+      title: data.title,
+      roleTag: data.roleTag,
+      jdText: data.jdText,
+      filePath: nextPath,
+      fileName: nextName,
+      active: data.active,
+    },
+  });
+
+  await audit(session.user.id, "UPDATE_JOB_DESCRIPTION", "JobDescription", { id });
+  revalidatePath("/admin/job-descriptions");
+  revalidatePath("/");
+}
+
+export async function toggleJobDescriptionActive(id: string, active: boolean) {
+  const session = await requireAdmin();
+  await prisma.jobDescription.update({ where: { id }, data: { active } });
+  await audit(session.user.id, active ? "ENABLE_JOB_DESCRIPTION" : "DISABLE_JOB_DESCRIPTION", "JobDescription", { id });
+  revalidatePath("/admin/job-descriptions");
+  revalidatePath("/");
+}
+
+export async function deleteJobDescription(id: string) {
+  const session = await requireAdmin();
+  const existing = await prisma.jobDescription.findUnique({ where: { id } });
+  if (existing?.filePath) {
+    await unlink(existing.filePath).catch(() => {});
+  }
+  await prisma.jobDescription.delete({ where: { id } });
+  await audit(session.user.id, "DELETE_JOB_DESCRIPTION", "JobDescription", { id });
+  revalidatePath("/admin/job-descriptions");
+  revalidatePath("/");
 }
 
 // ——— Email templates ———

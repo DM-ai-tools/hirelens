@@ -100,6 +100,7 @@ model Candidate {
   name                String?
   email               String?
   phone               String?
+  location            String?
   resumePath          String
   resumeFileName      String
   rawText             String?         @db.Text
@@ -152,6 +153,18 @@ model AssessmentFile {
   createdAt    DateTime   @default(now())
 
   @@index([assessmentId])
+}
+
+model JobDescription {
+  id        String   @id @default(cuid())
+  title     String
+  roleTag   String?
+  jdText    String   @db.Text
+  filePath  String?
+  fileName  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AssessmentSend {

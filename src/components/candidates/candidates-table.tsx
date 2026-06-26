@@ -40,6 +40,7 @@ export interface CandidateRow {
   name: string | null;
   email: string | null;
   phone: string | null;
+  location?: string | null;
   overallExperience: number | null;
   relevantExperience: number | null;
   strengths: string[];

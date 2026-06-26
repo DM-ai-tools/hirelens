@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { ScreeningForm } from "@/components/screening/screening-form";
 import { ScoringLegend } from "@/components/screening/scoring-legend";
+import type { JobDescriptionRecord } from "@/lib/job-description-queries";
 
-export function LandingHero() {
+export function LandingHero({
+  savedJobDescriptions = [],
+}: {
+  savedJobDescriptions?: JobDescriptionRecord[];
+}) {
   const [scoreThreshold, setScoreThreshold] = useState("70");
 
   return (
@@ -47,6 +52,7 @@ export function LandingHero() {
           <ScreeningForm
             scoreThreshold={scoreThreshold}
             onScoreThresholdChange={setScoreThreshold}
+            savedJobDescriptions={savedJobDescriptions}
           />
         </div>
       </section>

@@ -8,7 +8,8 @@ import {
   rankExperienceIntelligence,
 } from "./experience-intelligence.service";
 import { getMissingMustHaveLabels } from "@/lib/constants";
-import type { ParsedResume } from "@/types";
+import { pickCandidateLocation } from "@/lib/resume-location";
+import type { ParsedResume, ExperienceIntelligenceResult } from "@/types";
 
 export async function processJobPipeline(jobId: string) {
   const job = await prisma.job.findUnique({
@@ -103,6 +104,9 @@ export async function processJobPipeline(jobId: string) {
           name: parsed.name || candidate.name,
           email: parsed.email || candidate.email,
           phone: parsed.phone || candidate.phone,
+          location:
+            pickCandidateLocation(candidate.location, parsed.location, parsed.rawText) ??
+            undefined,
         },
       });
       parsedCount++;
@@ -189,6 +193,13 @@ export async function processJobPipeline(jobId: string) {
           name: evaluation.name || candidate.name,
           email: evaluation.email || candidate.email,
           phone: evaluation.mobile || candidate.phone,
+          location:
+            pickCandidateLocation(
+              candidate.location,
+              evaluation.location,
+              candidate.rawText,
+              expIntel.candidateLocation
+            ) ?? undefined,
           overallExperience: evaluation.overall_experience_years,
           relevantExperience: evaluation.relevant_experience_years,
           strengths: evaluation.strengths,
@@ -289,6 +300,8 @@ export async function processJobPipeline(jobId: string) {
       data: { experienceIntelligenceRank: r.rank },
     });
   }
+
+  await backfillCandidateLocations(jobId);
 
   const terminal = await prisma.candidate.findMany({
     where: { jobId },
@@ -397,4 +410,28 @@ export async function getProcessingStatus(jobId: string) {
     etaSeconds,
     candidates,
   };
+}
+
+async function backfillCandidateLocations(jobId: string) {
+  const candidates = await prisma.candidate.findMany({
+    where: { jobId, rawText: { not: null } },
+  });
+
+  for (const candidate of candidates) {
+    const llm = candidate.llmRaw as { location?: string | null } | null;
+    const ei = candidate.experienceIntelligenceData as ExperienceIntelligenceResult | null;
+    const resolved = pickCandidateLocation(
+      candidate.location,
+      llm?.location,
+      candidate.rawText,
+      ei?.candidateLocation
+    );
+    const stored = candidate.location?.trim() || null;
+    if (resolved !== stored) {
+      await prisma.candidate.update({
+        where: { id: candidate.id },
+        data: { location: resolved },
+      });
+    }
+  }
 }
