@@ -3,7 +3,8 @@ set -e
 
 UPLOAD_DIR="${UPLOAD_DIR:-/app/uploads}"
 REPORT_DIR="${REPORT_DIR:-/app/reports}"
-mkdir -p "$UPLOAD_DIR" "$REPORT_DIR"
+mkdir -p "$UPLOAD_DIR" "$REPORT_DIR" /tmp/next-cache
+export NEXT_CACHE_DIR=/tmp/next-cache
 
 PRISMA_MIGRATE_CLI="./prisma-migrate/node_modules/prisma/build/index.js"
 PRISMA_MIGRATE_NODE_PATH="$(pwd)/prisma-migrate/node_modules"

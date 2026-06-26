@@ -22,7 +22,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG APP_BUILD_ID=e24df13-features
+ARG APP_BUILD_ID=pdf-unpdf-fix
 RUN echo "HireLens build ${APP_BUILD_ID}"
 ENV NEXT_TELEMETRY_DISABLED=1
 # Placeholder only for `next build` — real DATABASE_URL is set at runtime on Railway.
@@ -61,8 +61,8 @@ RUN chmod +x ./scripts/start-production.sh \
   && test -f ./prisma-migrate/node_modules/effect/package.json \
   && test -f ./node_modules/dotenv/package.json \
   && test -f ./prisma-migrate/node_modules/prisma/build/index.js \
-  && mkdir -p uploads reports \
-  && chown -R nextjs:nodejs uploads reports prisma-migrate scripts/start-production.sh
+  && mkdir -p uploads reports .next/cache \
+  && chown -R nextjs:nodejs uploads reports .next prisma-migrate scripts/start-production.sh
 
 USER nextjs
 EXPOSE 8080

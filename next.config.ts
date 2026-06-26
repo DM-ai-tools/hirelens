@@ -2,7 +2,7 @@
 const nextConfig = {
   output: "standalone",
   serverExternalPackages: [
-    "pdf-parse",
+    "unpdf",
     "puppeteer",
     "tesseract.js",
     "bullmq",

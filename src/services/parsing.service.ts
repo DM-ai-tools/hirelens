@@ -107,12 +107,11 @@ async function parseResumeDocumentToMarkdown(
 }
 
 async function parsePdf(filePath: string): Promise<string> {
-  const { PDFParse } = await import("pdf-parse");
+  const { extractText, getDocumentProxy } = await import("unpdf");
   const buffer = await readFile(filePath);
-  const parser = new PDFParse({ data: buffer });
-  const result = await parser.getText();
-  await parser.destroy();
-  return result.text || "";
+  const pdf = await getDocumentProxy(new Uint8Array(buffer));
+  const { text } = await extractText(pdf, { mergePages: true });
+  return text || "";
 }
 
 async function parsePdfOcr(filePath: string): Promise<string> {
